@@ -8,7 +8,7 @@ const {
   GraphQLEnumType,
   GraphQLNonNull,
 } = require("graphql");
-const Book = require("../models/Book");
+const BookCopy = require("../models/BookCopy");
 const Books = require("../models/Books");
 const Borrowed_Book = require("../models/BorrowedBook");
 const Genre = require("../models/Genre");
@@ -58,14 +58,14 @@ const BooksType = new GraphQLObjectType({
   }),
 });
 
-//Book Type
-const BookType = new GraphQLObjectType({
-  name: "Book",
+//BookCopy Type
+const BookCopyType = new GraphQLObjectType({
+  name: "BookCopy",
   fields: () => ({
     id: { type: GraphQLID },
     number: { type: GraphQLString },
     status: { type: GraphQLString },
-    details: {
+    book: {
       type: BooksType,
       resolve(parent, args) {
         return Books.findById(parent.bookId);
@@ -78,10 +78,11 @@ const BookType = new GraphQLObjectType({
 const BorrowedBookType = new GraphQLObjectType({
   name: "BorrowedBook",
   fields: () => ({
+    id: { type: GraphQLID },
     book: {
-      type: BookType,
+      type: BookCopyType,
       resolve(parent, args) {
-        return Book.findById(parent.bookId);
+        return BookCopy.findById(parent.bookId);
       },
     },
     user: {
@@ -100,10 +101,11 @@ const BorrowedBookType = new GraphQLObjectType({
 const ReservedBookType = new GraphQLObjectType({
   name: "ReservedBook",
   fields: () => ({
+    id: { type: GraphQLID },
     book: {
-      type: BookType,
+      type: BookCopyType,
       resolve(parent, args) {
-        return Book.findById(parent.bookId);
+        return BookCopy.findById(parent.bookId);
       },
     },
     user: {
@@ -121,6 +123,7 @@ const ReservedBookType = new GraphQLObjectType({
 const RatingsType = new GraphQLObjectType({
   name: "Ratings",
   fields: () => ({
+    id: { type: GraphQLID },
     book: {
       type: BooksType,
       resolve(parent, args) {
@@ -136,4 +139,112 @@ const RatingsType = new GraphQLObjectType({
     rating: { type: GraphQLString },
     review: { type: GraphQLString },
   }),
+});
+
+const RootQuery = new GraphQLObjectType({
+  name: "RootQueryType",
+  fields: {
+    genres: {
+      type: new GraphQLList(GenreType),
+      resolve(parent, args) {
+        return Genre.find();
+      },
+      users: {
+        type: new GraphQLList(UserType),
+        resolve(parent, args) {
+          return User.find();
+        },
+      },
+    },
+    books: {
+      type: new GraphQLList(BooksType),
+      resolve(parent, args) {
+        return Books.find();
+      },
+    },
+    bookcopy: {
+      type: BookCopyType,
+      args: { id: { type: GraphQLID } },
+      resolve(parent, args) {
+        return BookCopy.findById(args.id);
+      },
+    },
+  },
+});
+
+const mutation = new GraphQLObjectType({
+  name: "Mutation",
+  fields: {
+    //add a genre
+    addGenre: {
+      type: GenreType,
+      args: {
+        name: { type: GraphQLNonNull(GraphQLString) },
+      },
+      resolve(parent, args) {
+        const genre = new Genre({
+          name: args.name,
+        });
+
+        return genre.save();
+      },
+    },
+
+    //add a book
+    addBooks: {
+      type: BooksType,
+      args: {
+        title: { type: GraphQLNonNull(GraphQLString) },
+        author: { type: GraphQLNonNull(GraphQLString) },
+        description: { type: GraphQLNonNull(GraphQLString) },
+        image_url: { type: GraphQLNonNull(GraphQLString) },
+        genre: { type: GraphQLNonNull(GraphQLID) },
+        copies: { type: GraphQLNonNull(GraphQLString) },
+      },
+      resolve(parent, args) {
+        const books = new Books({
+          title: args.title,
+          author: args.author,
+          description: args.description,
+          image_url: args.image_url,
+          genreId: args.genre,
+          copies: args.copies,
+        });
+
+        return books.save();
+      },
+    },
+    //add a book copy
+    addBook: {
+      type: BookCopyType,
+      args: {
+        number: { type: GraphQLNonNull(GraphQLString) },
+        status: {
+          type: new GraphQLEnumType({
+            name: "BookStatus",
+            values: {
+              available: { value: "Available" },
+              checked: { value: "Checked out" },
+              reserved: { vaue: "Reserved" },
+            },
+          }),
+          defaultValue: "Available",
+        },
+        bookId: { type: GraphQLNonNull(GraphQLID) },
+      },
+      resolve(parent, args) {
+        const bookcopy = new BookCopy({
+          number: args.number,
+          status: args.status,
+          bookId: args.bookId,
+        });
+        return bookcopy.save();
+      },
+    },
+  },
+});
+
+module.exports = new GraphQLSchema({
+  query: RootQuery,
+  mutation,
 });

@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
 
-const BookSchema = new mongoose.Schema({
+const BookCopySchema = new mongoose.Schema({
   number: {
     type: String,
   },
   status: {
     type: String,
-    enum: ["Availlable", "Checked out", "Reserved"],
+    enum: ["Available", "Checked out", "Reserved"],
   },
   bookId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -14,4 +14,4 @@ const BookSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("Book", BookSchema);
+module.exports = mongoose.model("BookCopy", BookCopySchema);
