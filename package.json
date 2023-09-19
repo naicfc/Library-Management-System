@@ -1,0 +1,19 @@
+{
+  "name": "library-management-system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/naicfc/Library-Management-System.git"
+  },
+  "author": "Godfred Nai",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/naicfc/Library-Management-System/issues"
+  },
+  "homepage": "https://github.com/naicfc/Library-Management-System#readme"
+}
