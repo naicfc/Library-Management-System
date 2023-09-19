@@ -11,7 +11,6 @@ const {
 const BookCopy = require("../models/BookCopy");
 const Books = require("../models/Books");
 const Borrowed_Book = require("../models/BorrowedBook");
-const Genre = require("../models/Genre");
 const Ratings = require("../models/Ratings");
 const Reserved_Book = require("../models/ReservedBook");
 const User = require("../models/User");
@@ -30,15 +29,6 @@ const UserType = new GraphQLObjectType({
   }),
 });
 
-//Genre Type
-const GenreType = new GraphQLObjectType({
-  name: "Genre",
-  fields: () => ({
-    id: { type: GraphQLID },
-    name: { type: GraphQLString },
-  }),
-});
-
 //Books Type
 const BooksType = new GraphQLObjectType({
   name: "Books",
@@ -48,12 +38,7 @@ const BooksType = new GraphQLObjectType({
     author: { type: GraphQLString },
     description: { type: GraphQLString },
     image_url: { type: GraphQLString },
-    genre: {
-      type: GenreType,
-      resolve(parent, args) {
-        return Genre.findById(parent.genreId);
-      },
-    },
+    genre: { type: GraphQLList(GraphQLString) },
     copies: { type: GraphQLString },
   }),
 });
@@ -144,18 +129,6 @@ const RatingsType = new GraphQLObjectType({
 const RootQuery = new GraphQLObjectType({
   name: "RootQueryType",
   fields: {
-    genres: {
-      type: new GraphQLList(GenreType),
-      resolve(parent, args) {
-        return Genre.find();
-      },
-      users: {
-        type: new GraphQLList(UserType),
-        resolve(parent, args) {
-          return User.find();
-        },
-      },
-    },
     books: {
       type: new GraphQLList(BooksType),
       resolve(parent, args) {
@@ -175,21 +148,6 @@ const RootQuery = new GraphQLObjectType({
 const mutation = new GraphQLObjectType({
   name: "Mutation",
   fields: {
-    //add a genre
-    addGenre: {
-      type: GenreType,
-      args: {
-        name: { type: GraphQLNonNull(GraphQLString) },
-      },
-      resolve(parent, args) {
-        const genre = new Genre({
-          name: args.name,
-        });
-
-        return genre.save();
-      },
-    },
-
     //add a book
     addBooks: {
       type: BooksType,
@@ -198,7 +156,7 @@ const mutation = new GraphQLObjectType({
         author: { type: GraphQLNonNull(GraphQLString) },
         description: { type: GraphQLNonNull(GraphQLString) },
         image_url: { type: GraphQLNonNull(GraphQLString) },
-        genre: { type: GraphQLNonNull(GraphQLID) },
+        genre: { type: GraphQLNonNull(GraphQLList(GraphQLString)) },
         copies: { type: GraphQLNonNull(GraphQLString) },
       },
       resolve(parent, args) {
@@ -207,7 +165,7 @@ const mutation = new GraphQLObjectType({
           author: args.author,
           description: args.description,
           image_url: args.image_url,
-          genreId: args.genre,
+          genre: args.genre,
           copies: args.copies,
         });
 

@@ -13,9 +13,8 @@ const BooksSchema = new mongoose.Schema({
   image_url: {
     type: String,
   },
-  genreId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Genre"
+  genre: {
+    type: [String],
   },
   copies: {
     type: String,
