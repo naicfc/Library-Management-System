@@ -10,10 +10,10 @@ const {
 } = require("graphql");
 const BookCopy = require("../models/BookCopy");
 const Books = require("../models/Books");
-const Borrowed_Book = require("../models/BorrowedBook");
+const BorrowedBook = require("../models/BorrowedBook");
 const Ratings = require("../models/Ratings");
-const Reserved_Book = require("../models/ReservedBook");
 const User = require("../models/User");
+const ReservedBook = require("../models/ReservedBook");
 
 //User Type
 const UserType = new GraphQLObjectType({
@@ -142,6 +142,58 @@ const RootQuery = new GraphQLObjectType({
         return BookCopy.findById(args.id);
       },
     },
+    ratings: {
+      type: RatingsType,
+      args: { id: { type: GraphQLID } },
+      resolve(parent, args) {
+        return Ratings.findById(args.id);
+      },
+    },
+    users: {
+      type: new GraphQLList(UserType),
+      resolve(parent, args) {
+        return User.find();
+      },
+    },
+    user: {
+      type: UserType,
+      args: { id: { type: GraphQLID } },
+      resolve(parent, args) {
+        return User.findById(args.id);
+      },
+    },
+    reservedBook: {
+      type: ReservedBookType,
+      args: {
+        id: {
+          type: GraphQLID,
+        },
+      },
+      resolve(parent, args) {
+        return ReservedBook.findById(args.id);
+      },
+    },
+    reservedBooks: {
+      type: new GraphQLList(ReservedBookType),
+      resolve(parent, args) {
+        return ReservedBook.find();
+      },
+    },
+    borrowedBook: {
+      type: ReservedBookType,
+      args: {
+        id: { type: GraphQLID },
+      },
+      resolve(parent, args) {
+        return BorrowedBook.findById(args.id);
+      },
+    },
+    borrowedBooks: {
+      type: new GraphQLList(BorrowedBookType),
+      resolve(parent, args) {
+        return BorrowedBook.find();
+      },
+    },
   },
 });
 
@@ -198,6 +250,102 @@ const mutation = new GraphQLObjectType({
         });
         return bookcopy.save();
       },
+    },
+
+    //add a rating
+    addRating: {
+      type: RatingsType,
+      args: {
+        bookId: { type: GraphQLNonNull(GraphQLID) },
+        userId: { type: GraphQLNonNull(GraphQLID) },
+        rating: {
+          type: new GraphQLEnumType({
+            name: "Rate",
+            values: {
+              one: { value: "1" },
+              two: { value: "2" },
+              three: { value: "3" },
+              four: { value: "4" },
+              five: { value: "5" },
+            },
+          }),
+          defaultValue: "1",
+        },
+        review: { type: GraphQLNonNull(GraphQLString) },
+      },
+      resolve(parent, args) {
+        const rating = new Ratings({
+          bookId: args.bookId,
+          userId: args.userId,
+          rating: args.rating,
+          review: args.review,
+        });
+        return rating.save();
+      },
+    },
+
+    //add a user
+    addUser: {
+      type: UserType,
+      args: {
+        username: { type: GraphQLNonNull(GraphQLString) },
+        email: { type: GraphQLNonNull(GraphQLString) },
+        phone: { type: GraphQLNonNull(GraphQLString) },
+        password: { type: GraphQLNonNull(GraphQLString) },
+        address: { type: GraphQLNonNull(GraphQLString) },
+        role: {
+          type: new GraphQLEnumType({
+            name: "userRole",
+            values: {
+              member: { value: "member" },
+              librarian: { value: "librarian" },
+              admin: { value: "admin" },
+            },
+          }),
+          defaultValue: "member",
+        },
+      },
+      resolve(parent, args) {
+        const user = new User({
+          username: args.username,
+          email: args.email,
+          phone: args.phone,
+          password: args.password,
+          address: args.address,
+          role: args.role,
+        });
+        return user.save();
+      },
+    },
+
+    //reserve a book
+    reservebook: {
+      type: ReservedBookType,
+      args: {
+        bookId: { type: GraphQLNonNull(GraphQLID) },
+        userId: { type: GraphQLNonNull(GraphQLID) },
+        reservation_date: { type: GraphQLNonNull(GraphQLString) },
+        status: {
+          type: new GraphQLEnumType({
+            name: "ReservationStatus",
+            values: {
+              pending: { value: "Pending" },
+              approved: { value: "Approved" },
+              cancelled: { value: "Cancelled" },
+            },
+          }),
+          defaultValue: "",
+        },
+      },
+      resolve(parent, args){
+        const reservedbook = new ReservedBook({
+          bookId : args.bookId,
+          userId : args.userId,
+          reservation_date : args.reservation_date,
+          status: args.status
+        });
+        return reservedbook.save();
+      }
     },
   },
 });

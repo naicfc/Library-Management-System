@@ -20,6 +20,8 @@ const UserSchema = new mongoose.Schema({
     type: String,
     enum: ["member", "librarian", "admin"],
   },
-});
+},
+{ timestamps: true }
+);
 
 module.exports = mongoose.model("User", UserSchema);
